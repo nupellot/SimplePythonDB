@@ -1,11 +1,13 @@
 variables = {"C": "29", "B": "30"}
 
-for name in variables:
-	print("\033[45m", name, "\033[0m", sep=" ", end=" ")
-	print("\033[0m", variables[name], "\033[0m", sep="")
+def print_variables():
+	print("\033[42m", "Текущее состояние базы", "\033[0m")
+	for name in variables:
+		print("\033[45m", name, "\033[0m", sep=" ", end=" ")
+		print("\033[0m", variables[name], "\033[0m", sep="")
 
 while True:
-	line = input()
+	line = input("> ")
 	if line == "END":  # Завершаем работу программы.
 		print("Завершение работы программы")
 		exit(1)
@@ -37,3 +39,4 @@ while True:
 		for key in variables:
 			if variables[key] == arguments[1]:
 				print(key)
+	print_variables()
