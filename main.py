@@ -1,4 +1,4 @@
-variables = {"C": "29", "B": "30"}
+global_variables = {"C": "29", "B": "30"}
 
 
 # Функция для вывода текущего состояния бд.
@@ -11,8 +11,8 @@ def print_variables(variables, transaction_depth):
 
 
 # Главная цикличная функция для обработки команд пользователя.
-def process_commands(variables, transaction_depth):
-
+def process_commands(global_variables, changes, transaction_depth):
+    
     # Вечный цикл ждёт ввода и завершается при получении команды "END"
     while True:
         line = input(">" * (transaction_depth + 1) + " ")
@@ -28,38 +28,45 @@ def process_commands(variables, transaction_depth):
             print("Слишком много аргументов")
             continue
 
+        variables = global_variables | changes
         command = arguments[0]
         # Обрабатываем команды пользователя.
         if command == "GET":
             print(variables.get(arguments[1]))
-        if command == "SET":
-            variables[arguments[1]] = arguments[2]
-        if command == "UNSET":
-            variables.pop(arguments[1])
-        if command == "FIND":
+        elif command == "FIND":
             for key in variables:
                 if variables[key] == arguments[1]:
                     print(key)
-        if command == "COUNTS":
+        elif command == "COUNTS":
             counter = 0
             for key in variables:
                 if variables[key] == arguments[1]:
                     counter += 1
             print(counter)
+        elif command == "SET":
+            changes[arguments[1]] = arguments[2]
+        elif command == "UNSET":
+            changes[arguments[1]] = None
 
         # Обрабатываем команды, связанные с транзакциями.
-        if command == "BEGIN":
-            new_variables = process_commands(variables.copy(),
-                                             transaction_depth + 1)
-            if new_variables is not None:
-                variables = new_variables.copy()
-        if command == "COMMIT":
-            return variables
-        if command == "ROLLBACK":
-            return None
+        elif command == "BEGIN":
+            changes |= process_commands(global_variables, 
+                                        changes.copy(), 
+                                        transaction_depth + 1)
+        elif command == "COMMIT":
+            return changes
+        elif command == "ROLLBACK":
+            return {}
         # Транзакции реализованы через рекурсивный вызов главной функции.
+        
+        elif command == "HELP":
+            with open('help.txt', 'r') as file:
+                read_file = file.read()
+                print(read_file)
+        else:
+            print(f"Неизвестная команда \"{command}\". Используйте HELP")
 
-        print_variables(variables, transaction_depth)
+        print_variables(global_variables | changes, transaction_depth)
 
 
-process_commands(variables, 0)
+process_commands(global_variables, {}, 0)
