@@ -28,9 +28,14 @@ def process_commands(global_variables, changes, transaction_depth):
             print("Слишком много аргументов")
             continue
 
-        variables = global_variables | changes
-        command = arguments[0]
+        
         # Обрабатываем команды пользователя.
+        
+        variables = global_variables | changes
+        # Текущее локальное состояние переменных, с которым мы работаем.
+        
+        command = arguments[0]
+        # Обработка команд, не изменяющих состояние БД.
         if command == "GET":
             print(variables.get(arguments[1]))
         elif command == "FIND":
@@ -43,6 +48,7 @@ def process_commands(global_variables, changes, transaction_depth):
                 if variables[key] == arguments[1]:
                     counter += 1
             print(counter)
+        # Обработка команд, изменяющих состояние БД.
         elif command == "SET":
             changes[arguments[1]] = arguments[2]
         elif command == "UNSET":
@@ -58,15 +64,19 @@ def process_commands(global_variables, changes, transaction_depth):
         elif command == "ROLLBACK":
             return {}
         # Транзакции реализованы через рекурсивный вызов главной функции.
+        # Каждый вызов в стеке хранит ссылку на исходное состояние БД
+        # а также свою копию всех совершенных в транзакции изменений.
+
         
-        elif command == "HELP":
+        elif command == "HELP":  # В случае, если пользователь не угадал с командой.
             with open('help.txt', 'r') as file:
-                read_file = file.read()
-                print(read_file)
+                print(file.read())
         else:
             print(f"Неизвестная команда \"{command}\". Используйте HELP")
 
+        # Для удобства выводим текущее состояние БД после каждой команды.
         print_variables(global_variables | changes, transaction_depth)
 
 
+# Запуск программы.
 process_commands(global_variables, {}, 0)
