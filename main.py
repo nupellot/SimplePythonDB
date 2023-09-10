@@ -3,8 +3,11 @@ global_variables = {"C": "29", "B": "30"}
 
 # Функция для вывода текущего состояния бд.
 def print_variables(variables, transaction_depth):
-    print("\033[42m", "Текущее состояние базы", "\033[0m", end=" ")
-    print(f"({transaction_depth} вложенность транзакции)")
+    print("\033[44m", "Текущее состояние базы", "\033[0m", end=" ")
+    if transaction_depth != 0:
+        print(f"({transaction_depth} вложенность транзакции)")
+    else:
+        print("")
     for name in variables:
         print("\033[45m", name, "\033[0m", sep=" ", end=" ")
         print("\033[0m", variables[name], "\033[0m", sep="")
@@ -50,19 +53,34 @@ def process_commands(global_variables, changes, transaction_depth):
             print(counter)
         # Обработка команд, изменяющих состояние БД.
         elif command == "SET":
-            changes[arguments[1]] = arguments[2]
+            if len(arguments) == 3:
+                changes[arguments[1]] = arguments[2]
+            else:
+                print("Неподходящие аргументы. Верный формат: /SET <ИМЯ> <ЗНАЧЕНИЕ>")
         elif command == "UNSET":
-            changes[arguments[1]] = None
+            changes[arguments[1]] = "NULL"
 
         # Обрабатываем команды, связанные с транзакциями.
         elif command == "BEGIN":
             changes |= process_commands(global_variables, 
                                         changes.copy(), 
                                         transaction_depth + 1)
+            for change in dict(changes):
+                if changes[change] == "NULL":
+                    changes.pop(change)
         elif command == "COMMIT":
-            return changes
+            if transaction_depth != 0:
+                return changes
+            else:
+                print("Нет транзакции, которую можно было бы завершить")
+                continue
+                
         elif command == "ROLLBACK":
-            return {}
+            if transaction_depth != 0:
+                return {}
+            else:
+                print("Нет транзакции, которую можно было бы завершить")
+                continue
         # Транзакции реализованы через рекурсивный вызов главной функции.
         # Каждый вызов в стеке хранит ссылку на исходное состояние БД
         # а также свою копию всех совершенных в транзакции изменений.
