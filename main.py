@@ -1,5 +1,3 @@
-global_variables = {"C": "29", "B": "30"}
-
 
 # Функция для вывода текущего состояния бд.
 def print_variables(variables, transaction_depth):
@@ -15,7 +13,6 @@ def print_variables(variables, transaction_depth):
 
 # Главная цикличная функция для обработки команд пользователя.
 def process_commands(global_variables, changes, transaction_depth):
-    
     # Вечный цикл ждёт ввода и завершается при получении команды "END"
     while True:
         line = input(">" * (transaction_depth + 1) + " ")
@@ -96,5 +93,7 @@ def process_commands(global_variables, changes, transaction_depth):
         print_variables(global_variables | changes, transaction_depth)
 
 
+# Хранилище переменных.
+global_variables = {}
 # Запуск программы.
 process_commands(global_variables, {}, 0)
